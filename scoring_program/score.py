@@ -1,6 +1,17 @@
-import argparse
 import json
 from pathlib import Path
+
+
+def find_file(possible_paths):
+    """Return the first existing file from a list of possible paths."""
+    for path in possible_paths:
+        path = Path(path)
+        if path.exists():
+            return path
+    raise FileNotFoundError(
+        "None of the expected files were found:\n"
+        + "\n".join(str(p) for p in possible_paths)
+    )
 
 
 def read_number(file_path: Path) -> float:
@@ -10,12 +21,7 @@ def read_number(file_path: Path) -> float:
 
 
 def compute_score(ground_truth: float, prediction: float) -> dict:
-    """
-    Compute a simple dummy score.
-
-    A perfect prediction gives 100.
-    A larger error gives a lower score.
-    """
+    """Compute a simple dummy score."""
     error = abs(ground_truth - prediction)
     score = max(0.0, 100.0 - error * 10.0)
 
@@ -28,52 +34,45 @@ def compute_score(ground_truth: float, prediction: float) -> dict:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Dummy Codabench scoring program")
-
-    parser.add_argument(
-        "--reference_file",
-        type=str,
-        default=None,
-        help="Path to the ground-truth file.",
-    )
-
-    parser.add_argument(
-        "--prediction_file",
-        type=str,
-        default=None,
-        help="Path to the submitted prediction file.",
-    )
-
-    parser.add_argument(
-        "--output_dir",
-        type=str,
-        default=None,
-        help="Directory where scores.json will be written.",
-    )
-
-    args = parser.parse_args()
-
     project_root = Path(__file__).resolve().parents[1]
 
-    reference_file = (
-        Path(args.reference_file)
-        if args.reference_file
-        else project_root / "reference_data" / "ground_truth.txt"
+    reference_file = find_file(
+        [
+            project_root / "reference_data" / "ground_truth.txt",
+            project_root / "ground_truth.txt",
+            "/app/input/ref/ground_truth.txt",
+            "/app/input/ref/reference_data/ground_truth.txt",
+            "/app/reference_data/ground_truth.txt",
+        ]
     )
 
-    prediction_file = (
-        Path(args.prediction_file)
-        if args.prediction_file
-        else project_root / "sample_result_submission" / "prediction.txt"
+    prediction_file = find_file(
+        [
+            project_root / "sample_result_submission" / "prediction.txt",
+            project_root / "prediction.txt",
+            "/app/input/res/prediction.txt",
+            "/app/input/res/sample_result_submission/prediction.txt",
+            "/app/sample_result_submission/prediction.txt",
+        ]
     )
 
-    output_dir = (
-        Path(args.output_dir)
-        if args.output_dir
-        else project_root / "scoring_output"
-    )
+    output_dir_candidates = [
+        Path("/app/output"),
+        Path("/app/output/res"),
+        project_root / "scoring_output",
+    ]
 
-    output_dir.mkdir(parents=True, exist_ok=True)
+    output_dir = None
+    for candidate in output_dir_candidates:
+        try:
+            candidate.mkdir(parents=True, exist_ok=True)
+            output_dir = candidate
+            break
+        except PermissionError:
+            continue
+
+    if output_dir is None:
+        raise RuntimeError("No writable output directory found.")
 
     ground_truth = read_number(reference_file)
     prediction = read_number(prediction_file)
