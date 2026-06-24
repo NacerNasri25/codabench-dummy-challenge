@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+scoring_output/
+test_output/
+.env
+.venv/
