@@ -132,8 +132,8 @@ def main():
     )
 
     output_dir_candidates = [
-        Path("/app/output"),
         Path("/app/output/res"),
+        Path("/app/output"),
         project_root / "scoring_output",
     ]
 
