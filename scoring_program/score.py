@@ -33,6 +33,81 @@ def compute_score(ground_truth: float, prediction: float) -> dict:
     }
 
 
+def write_detailed_results(output_dir: Path, scores: dict) -> None:
+    """Write an HTML detailed result page for Codabench."""
+    html_file = output_dir / "detailed_results.html"
+
+    html_content = f"""
+    <html>
+    <head>
+        <title>Detailed Results</title>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                margin: 30px;
+            }}
+            table {{
+                border-collapse: collapse;
+                width: 60%;
+            }}
+            th, td {{
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }}
+            th {{
+                background-color: #f2f2f2;
+            }}
+            .score {{
+                font-size: 24px;
+                font-weight: bold;
+                color: #2c7;
+            }}
+        </style>
+    </head>
+    <body>
+        <h1>Detailed Results</h1>
+
+        <p>This page shows additional information beyond the leaderboard score.</p>
+
+        <p class="score">Score: {scores["score"]}</p>
+
+        <table>
+            <tr>
+                <th>Metric</th>
+                <th>Value</th>
+            </tr>
+            <tr>
+                <td>Ground Truth</td>
+                <td>{scores["ground_truth"]}</td>
+            </tr>
+            <tr>
+                <td>Prediction</td>
+                <td>{scores["prediction"]}</td>
+            </tr>
+            <tr>
+                <td>Error</td>
+                <td>{scores["error"]}</td>
+            </tr>
+            <tr>
+                <td>Score</td>
+                <td>{scores["score"]}</td>
+            </tr>
+        </table>
+
+        <h2>Interpretation</h2>
+        <p>
+            The submitted prediction is compared with the reference value.
+            A smaller error leads to a higher score.
+        </p>
+    </body>
+    </html>
+    """
+
+    with open(html_file, "w", encoding="utf-8") as file:
+        file.write(html_content)
+
+
 def main():
     project_root = Path(__file__).resolve().parents[1]
 
@@ -83,6 +158,7 @@ def main():
 
     with open(scores_file, "w", encoding="utf-8") as file:
         json.dump(scores, file, indent=4)
+        write_detailed_results(output_dir, scores)
 
     print(f"Reference file: {reference_file}")
     print(f"Prediction file: {prediction_file}")

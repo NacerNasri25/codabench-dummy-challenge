@@ -16,6 +16,8 @@ contact_email: nacer.nasri@uni-wuppertal.de
 pages:
   - title: Overview
     file: pages/overview.md
+  - title: Tutorial
+    file: pages/tutorial.md
   - title: Terms
     file: pages/terms.md
 
