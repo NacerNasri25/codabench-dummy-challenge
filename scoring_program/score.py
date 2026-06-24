@@ -133,7 +133,7 @@ def main():
         ]
     )
 
-    # Codabench expects scores.json in /app/output/res.
+    # Codabench expects leaderboard scores in /app/output/res/scores.json.
     # For local testing, we use scoring_output/.
     output_dir_candidates = [
         Path("/app/output/res"),
@@ -157,18 +157,32 @@ def main():
 
     scores = compute_score(ground_truth, prediction)
 
+    # Main score file for Codabench leaderboard.
     scores_file = output_dir / "scores.json"
 
     with open(scores_file, "w", encoding="utf-8") as file:
         json.dump(scores, file, indent=4)
 
-    # Detailed results are written to the same output directory.
-    write_detailed_results(output_dir, scores)
+    # Detailed results:
+    # On Codabench, detailed_results.html should be written directly to /app/output.
+    # Locally, we write it to scoring_output/.
+    codabench_output_dir = Path("/app/output")
+
+    if codabench_output_dir.exists():
+        detailed_output_dir = codabench_output_dir
+
+        # Compatibility copy: some setups also read /app/output/scores.json
+        with open(codabench_output_dir / "scores.json", "w", encoding="utf-8") as file:
+            json.dump(scores, file, indent=4)
+    else:
+        detailed_output_dir = output_dir
+
+    write_detailed_results(detailed_output_dir, scores)
 
     print(f"Reference file: {reference_file}")
     print(f"Prediction file: {prediction_file}")
     print(f"Scores written to: {scores_file}")
-    print(f"Detailed results written to: {output_dir / 'detailed_results.html'}")
+    print(f"Detailed results written to: {detailed_output_dir / 'detailed_results.html'}")
     print(scores)
 
 
